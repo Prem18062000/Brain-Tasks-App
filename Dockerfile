@@ -1,30 +1,21 @@
-# ====== BUILD STAGE ======
-FROM node:18-alpine AS builder
+# ------------------------------------------------------
+# Production-ready Dockerfile for static Vite/React dist
+# ------------------------------------------------------
 
-# Set workdir
-WORKDIR /app
+# Use lightweight Nginx to serve static files
+FROM nginx:stable-alpine
 
-# Install deps using package.json + lock file
-COPY package*.json ./
-RUN npm ci
+# Clean default nginx HTML
+RUN rm -rf /usr/share/nginx/html/*
 
-# Copy source and build
-COPY . .
-RUN npm run build    # outputs to /app/dist
+# Copy the dist folder from the repo into the Nginx web directory
+COPY dist/ /usr/share/nginx/html/
 
-# ====== RUNTIME STAGE ======
-FROM node:18-alpine AS runner
+# Copy a custom nginx configuration (optional, but recommended for SPA)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-WORKDIR /usr/src/app
+# Expose port 80 inside container
+EXPOSE 80
 
-# We'll serve the built files using "serve" on port 3000
-RUN npm install -g serve
-
-# Copy built assets from the builder image
-COPY --from=builder /app/dist ./dist
-
-# Container listens on 3000
-EXPOSE 3000
-
-# Start HTTP server on port 3000
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Start nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]

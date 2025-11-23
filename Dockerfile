@@ -1,21 +1,15 @@
-# ------------------------------------------------------
-# Production-ready Dockerfile for static Vite/React dist
-# ------------------------------------------------------
-
-# Use lightweight Nginx to serve static files
+# Stage 1 — Nginx runtime
 FROM nginx:stable-alpine
 
-# Clean default nginx HTML
+# Remove default nginx website
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy the dist folder from the repo into the Nginx web directory
-COPY dist/ /usr/share/nginx/html/
-
-# Copy a custom nginx configuration (optional, but recommended for SPA)
+# Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80 inside container
+# Copy static files (Vite Output)
+COPY dist/ /usr/share/nginx/html/
+
 EXPOSE 80
 
-# Start nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]

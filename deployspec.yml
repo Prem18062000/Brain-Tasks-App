@@ -1,0 +1,14 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - aws eks update-kubeconfig --name ReactCluster --region ap-south-1
+
+  build:
+    commands:
+      - chmod +x scripts/deploy.sh
+      - ./scripts/deploy.sh
+
+artifacts:
+  files:
+    - '**/*'

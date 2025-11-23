@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 309539410867.dkr.ecr.us-east-1.amazonaws.com
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - docker build -t brain-tasks-app .
+      - docker tag brain-tasks-app:latest 309539410867.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app:latest
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - docker push 309539410867.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app:latest
+      - printf '[{"name":"brain-tasks-app","imageUri":"309539410867.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app:latest"}]' > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - appspec.yaml
+    - k8s/*.yaml
+    - scripts/deploy.sh

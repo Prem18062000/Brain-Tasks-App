@@ -1,0 +1,28 @@
+version: 0.2
+
+env:
+  variables:
+    REPOSITORY_URI: "309539410867.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app"
+    IMAGE_TAG: "latest" # optionally use CODEBUILD_RESOLVED_SOURCE_VERSION or build number
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - echo "Logged in to ECR"
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+  post_build:
+    commands:
+      - echo Pushing the Docker image...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing imageDetail.json artifact...
+      - printf '[{"name":"brain-tasks-app","imageUri":"%s:%s"}]' "$REPOSITORY_URI" "$IMAGE_TAG" > imagedefinitions.json
+artifacts:
+  files:
+    - imagedefinitions.json

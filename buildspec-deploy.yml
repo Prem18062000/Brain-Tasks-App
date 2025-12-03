@@ -1,0 +1,35 @@
+version: 0.2
+
+env:
+  variables:
+    CLUSTER_NAME: "my-eks-cluster"    # <--- replace with your cluster name
+    CLUSTER_REGION: "us-east-1"       # <--- replace with your region
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - echo Installing kubectl ...
+      - curl -sSL "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl
+      - chmod +x /usr/local/bin/kubectl
+      - echo "kubectl version:"
+      - kubectl version --client || true
+  pre_build:
+    commands:
+      - echo Configure AWS and get kubeconfig
+      - aws --version
+      - aws eks update-kubeconfig --region $CLUSTER_REGION --name $CLUSTER_NAME
+      - echo kubeconfig created, current context:
+      - kubectl config current-context
+  build:
+    commands:
+      - echo "Applying manifests..."
+      - kubectl apply -f k8s/    # make sure your repo has k8s/ directory
+      - echo "Optionally update image in deployment (if you prefer):"
+      - IMAGE_URI=$(jq -r '.[0].imageUri' imagedefinitions.json)
+      - echo "Using image: $IMAGE_URI"
+      - kubectl set image deployment/brain-tasks-deployment brain-tasks-container=$IMAGE_URI --record || true
+artifacts:
+  files:
+    - '**/*'

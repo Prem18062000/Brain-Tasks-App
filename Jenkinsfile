@@ -28,7 +28,7 @@ pipeline {
             steps {
                 sh '''
                   echo "Building Docker image: ${FULL_IMAGE_NAME}"
-                  docker build -t brain-tasks-app:${IMAGE_TAG} .
+                  sudo docker build -t brain-tasks-app:${IMAGE_TAG} .
                 '''
             }
         }
@@ -38,7 +38,7 @@ pipeline {
                 withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
                     sh '''
                       aws ecr get-login-password --region ${AWS_REGION} \
-                      | docker login --username AWS --password-stdin ${ECR_URI}
+                      | sudo docker login --username AWS --password-stdin ${ECR_URI}
                     '''
                 }
             }
@@ -47,8 +47,8 @@ pipeline {
         stage('Tag & Push Image to ECR') {
             steps {
                 sh '''
-                  docker tag brain-tasks-app:${IMAGE_TAG} ${FULL_IMAGE_NAME}
-                  docker push ${FULL_IMAGE_NAME}
+                  sudo docker tag brain-tasks-app:${IMAGE_TAG} ${FULL_IMAGE_NAME}
+                  sudo docker push ${FULL_IMAGE_NAME}
                 '''
             }
         }

@@ -6,7 +6,6 @@ pipeline {
      * (ALL FROM CREDENTIALS)
      ***********************/
     environment {
-
         AWS_REGION = credentials('aws-region')
         ECR_URI    = credentials('ecr-uri')
         GIT_REPO   = credentials('git-repo-url')
@@ -17,7 +16,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout Source Code') {
             steps {
                 git url: "${GIT_REPO}", branch: 'main'
@@ -26,10 +24,10 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh '''
+                sh """
                   echo "Building Docker image: ${FULL_IMAGE_NAME}"
                   docker build -t brain-tasks-app:${IMAGE_TAG} .
-                '''
+                """
             }
         }
 
@@ -48,28 +46,37 @@ pipeline {
                 }
             }
         }
-
-
+        
         stage('Tag & Push Image to ECR') {
             steps {
-                sh '''
+                sh """
                   docker tag brain-tasks-app:${IMAGE_TAG} ${FULL_IMAGE_NAME}
                   docker push ${FULL_IMAGE_NAME}
-                '''
+                """
+            }
+        }
+
+        stage('Configure EKS Cluster') {
+            steps {
+                sh """
+                  aws eks update-kubeconfig \
+                    --region ${AWS_REGION} \
+                    --name brain-tasks-eks
+                """
             }
         }
 
         stage('Deploy to EKS') {
             steps {
-                sh '''
-                  echo "Deploying image ${FULL_IMAGE_NAME} to EKS"
+                sh """
+                  echo "Deploying image ${FULL_IMAGE_NAME} to cluster brain-tasks-eks"
 
-                  kubectl set image deployment/brain-tasks-app \
+                  kubectl set image deployment/brain-tasks-eks \
                     brain-tasks=${FULL_IMAGE_NAME} \
                     --ignore-not-found=true || true
 
                   kubectl apply -f k8s/app/
-                '''
+                """
             }
         }
     }

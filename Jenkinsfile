@@ -1,0 +1,79 @@
+pipeline {
+    agent any
+
+    /***********************
+     * ENVIRONMENT VARIABLES
+     * (ALL FROM CREDENTIALS)
+     ***********************/
+    environment {
+
+        AWS_REGION = credentials('aws-region')
+        ECR_URI    = credentials('ecr-uri')
+        GIT_REPO   = credentials('git-repo-url')
+
+        // Build-based tag (traceable & rollback-friendly)
+        IMAGE_TAG = "v${BUILD_NUMBER}"
+        FULL_IMAGE_NAME = "${ECR_URI}:${IMAGE_TAG}"
+    }
+
+    stages {
+
+        stage('Checkout Source Code') {
+            steps {
+                git url: "${GIT_REPO}", branch: 'main'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh '''
+                  echo "Building Docker image: ${FULL_IMAGE_NAME}"
+                  docker build -t brain-tasks-app:${IMAGE_TAG} .
+                '''
+            }
+        }
+
+        stage('Login to AWS ECR') {
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
+                    sh '''
+                      aws ecr get-login-password --region ${AWS_REGION} \
+                      | docker login --username AWS --password-stdin ${ECR_URI}
+                    '''
+                }
+            }
+        }
+
+        stage('Tag & Push Image to ECR') {
+            steps {
+                sh '''
+                  docker tag brain-tasks-app:${IMAGE_TAG} ${FULL_IMAGE_NAME}
+                  docker push ${FULL_IMAGE_NAME}
+                '''
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                  echo "Deploying image ${FULL_IMAGE_NAME} to EKS"
+
+                  kubectl set image deployment/brain-tasks-app \
+                    brain-tasks=${FULL_IMAGE_NAME} \
+                    --ignore-not-found=true || true
+
+                  kubectl apply -f k8s/app/
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful: ${FULL_IMAGE_NAME}"
+        }
+        failure {
+            echo "❌ Deployment failed"
+        }
+    }
+}

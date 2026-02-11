@@ -1,21 +1,17 @@
 pipeline {
     agent any
 
-    /***********************
-     * ENVIRONMENT VARIABLES
-     * (ALL FROM CREDENTIALS)
-     ***********************/
     environment {
         AWS_REGION = credentials('aws-region')
         ECR_URI    = credentials('ecr-uri')
         GIT_REPO   = credentials('git-repo-url')
 
-        // Build-based tag (traceable & rollback-friendly)
         IMAGE_TAG = "v${BUILD_NUMBER}"
         FULL_IMAGE_NAME = "${ECR_URI}:${IMAGE_TAG}"
     }
 
     stages {
+
         stage('Checkout Source Code') {
             steps {
                 git url: "${GIT_REPO}", branch: 'main'
@@ -40,8 +36,8 @@ pipeline {
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
                     sh """
-                    aws ecr get-login-password --region ${AWS_REGION} |
-                    docker login --username AWS --password-stdin ${ECR_URI}
+                      aws ecr get-login-password --region ${AWS_REGION} |
+                      docker login --username AWS --password-stdin ${ECR_URI}
                     """
                 }
             }
@@ -69,39 +65,41 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 sh """
-                echo "Deploying image ${FULL_IMAGE_NAME} to cluster brain-tasks-eks"
+                  echo "Deploying image ${FULL_IMAGE_NAME} to cluster brain-tasks-eks"
 
-                # Update image if deployment already exists
-                kubectl set image deployment/brain-tasks-app \
+                  kubectl set image deployment/brain-tasks-app \
                     brain-tasks=${FULL_IMAGE_NAME} || true
 
-                # Create or update resources
-                kubectl apply -f k8s/app/ --validate=false
+                  kubectl apply -f k8s/app/ --validate=false
                 """
             }
         }
-    }
 
-    stage('Show Application URL') {
-        steps {
-            sh """
-            echo "Waiting for LoadBalancer external IP..."
-            for i in {1..20}; do
-                EXTERNAL_IP=\$(kubectl get svc brain-tasks-service \
-                -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-                if [ -n "\$EXTERNAL_IP" ]; then
-                echo "=============================================="
-                echo "✅ Application is LIVE"
-                echo "🌍 URL: http://\$EXTERNAL_IP:3000"
-                echo "=============================================="
-                exit 0
-                fi
-                echo "Still waiting for external IP..."
-                sleep 15
-            done
-            echo "❌ LoadBalancer external IP not assigned yet"
-            exit 1
-            """
+        stage('Show Application URL') {
+            steps {
+                sh """
+                  echo "Waiting for LoadBalancer external IP..."
+
+                  for i in {1..20}; do
+                    EXTERNAL_IP=\$(kubectl get svc brain-tasks-service \
+                      -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+                    if [ -n "\$EXTERNAL_IP" ]; then
+                      echo "=============================================="
+                      echo "✅ Application is LIVE"
+                      echo "🌍 URL: http://\$EXTERNAL_IP:3000"
+                      echo "=============================================="
+                      exit 0
+                    fi
+
+                    echo "Still waiting for external IP..."
+                    sleep 15
+                  done
+
+                  echo "❌ LoadBalancer external IP not assigned yet"
+                  exit 1
+                """
+            }
         }
     }
 
@@ -110,7 +108,7 @@ pipeline {
             echo "✅ Deployment successful: ${FULL_IMAGE_NAME}"
         }
         failure {
-            echo '❌ Deployment failed'
+            echo "❌ Deployment failed"
         }
     }
 }

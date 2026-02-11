@@ -71,11 +71,11 @@ pipeline {
                 sh """
                 echo "Deploying image ${FULL_IMAGE_NAME} to cluster brain-tasks-eks"
 
-                # Update image if deployment exists (do not fail if it doesn't)
-                kubectl set image deployment/brain-tasks-eks \
+                # Update image if deployment already exists
+                kubectl set image deployment/brain-tasks-app \
                     brain-tasks=${FULL_IMAGE_NAME} || true
 
-                # Apply manifests (create or update)
+                # Create or update resources
                 kubectl apply -f k8s/app/ --validate=false
                 """
             }

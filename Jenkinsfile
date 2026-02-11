@@ -82,12 +82,35 @@ pipeline {
         }
     }
 
+    stage('Show Application URL') {
+        steps {
+            sh """
+            echo "Waiting for LoadBalancer external IP..."
+            for i in {1..20}; do
+                EXTERNAL_IP=\$(kubectl get svc brain-tasks-service \
+                -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                if [ -n "\$EXTERNAL_IP" ]; then
+                echo "=============================================="
+                echo "✅ Application is LIVE"
+                echo "🌍 URL: http://\$EXTERNAL_IP:3000"
+                echo "=============================================="
+                exit 0
+                fi
+                echo "Still waiting for external IP..."
+                sleep 15
+            done
+            echo "❌ LoadBalancer external IP not assigned yet"
+            exit 1
+            """
+        }
+    }
+
     post {
         success {
             echo "✅ Deployment successful: ${FULL_IMAGE_NAME}"
         }
         failure {
-            echo "❌ Deployment failed"
+            echo '❌ Deployment failed'
         }
     }
 }

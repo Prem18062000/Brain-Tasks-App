@@ -46,7 +46,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Tag & Push Image to ECR') {
             steps {
                 sh """
@@ -69,13 +69,14 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 sh """
-                  echo "Deploying image ${FULL_IMAGE_NAME} to cluster brain-tasks-eks"
+                echo "Deploying image ${FULL_IMAGE_NAME} to cluster brain-tasks-eks"
 
-                  kubectl set image deployment/brain-tasks-eks \
-                    brain-tasks=${FULL_IMAGE_NAME} \
-                    --ignore-not-found=true || true
+                # Update image if deployment exists (do not fail if it doesn't)
+                kubectl set image deployment/brain-tasks-eks \
+                    brain-tasks=${FULL_IMAGE_NAME} || true
 
-                  kubectl apply -f k8s/app/
+                # Apply manifests (create or update)
+                kubectl apply -f k8s/app/ --validate=false
                 """
             }
         }

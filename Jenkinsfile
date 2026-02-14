@@ -87,7 +87,7 @@ pipeline {
                     if [ -n "\$EXTERNAL_IP" ]; then
                       echo "=============================================="
                       echo "✅ Application is LIVE"
-                      echo "🌍 URL: http://\$EXTERNAL_IP:3000"
+                      echo "🌍 URL: http://\$EXTERNAL_IP"
                       echo "=============================================="
                       exit 0
                     fi

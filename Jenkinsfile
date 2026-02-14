@@ -11,7 +11,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout Source Code') {
             steps {
                 git url: "${GIT_REPO}", branch: 'main'
@@ -65,12 +64,13 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 sh """
-                  echo "Deploying image ${FULL_IMAGE_NAME} to cluster brain-tasks-eks"
-
-                  kubectl set image deployment/brain-tasks-app \
-                    brain-tasks=${FULL_IMAGE_NAME} || true
-
-                  kubectl apply -f k8s/app/ --validate=false
+                echo "Deploying image ${FULL_IMAGE_NAME} to cluster brain-tasks-eks"
+                kubectl set image deployment/brain-tasks-app \
+                brain-tasks=${FULL_IMAGE_NAME} || true
+                pwd
+                ls -la
+                ls -la k8s/app
+                kubectl apply -f k8s/app/
                 """
             }
         }
@@ -108,7 +108,7 @@ pipeline {
             echo "✅ Deployment successful: ${FULL_IMAGE_NAME}"
         }
         failure {
-            echo "❌ Deployment failed"
+            echo '❌ Deployment failed'
         }
     }
 }

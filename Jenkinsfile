@@ -81,8 +81,7 @@ pipeline {
                   echo "Waiting for LoadBalancer external IP..."
 
                   for i in {1..20}; do
-                    EXTERNAL_IP=\$(kubectl get svc brain-tasks-service \
-                      -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                    EXTERNAL_IP=\$(kubectl get svc brain-tasks-service)
 
                     if [ -n "\$EXTERNAL_IP" ]; then
                       echo "=============================================="

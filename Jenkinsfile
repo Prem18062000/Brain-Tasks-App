@@ -71,7 +71,7 @@ pipeline {
                 ls -la
                 ls -la k8s/app
                 kubectl delete svc brain-tasks-service || true
-                kubectl apply -f k8s/app/
+                kubectl apply -f /var/jenkins_home/workspace/brain-tasks-app-pipeline/k8s/app/sks-app-pipeline/k8s/app/
                 """
             }
         }

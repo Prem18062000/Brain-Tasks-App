@@ -17,7 +17,4 @@ spec:
         image: 309539410867.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app:latest
         ports:
         - containerPort: 80
-      - name: brain-tasks-replica
-        image: 309539410867.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app:latest
-        ports:
-        - containerPort: 80
+

@@ -4,7 +4,6 @@ metadata:
   name: brain-tasks-service
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
-    service.beta.kubernetes.io/aws-load-balancer-type: nlb
 spec:
   type: LoadBalancer
   selector:
@@ -12,4 +11,3 @@ spec:
   ports:
     - port: 80
       targetPort: 80
-

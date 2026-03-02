@@ -19,5 +19,6 @@ build:
     - ls -R k8s
     - kubectl delete svc uptime-kuma --ignore-not-found=true
     - kubectl apply -f k8s/
+    - kubectl apply -f k8s/monitoring/kuma-service.yaml
     - echo "Services after apply:"
     - kubectl get svc

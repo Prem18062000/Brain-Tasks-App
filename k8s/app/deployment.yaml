@@ -14,7 +14,6 @@ spec:
     spec:
       containers:
       - name: brain-tasks
-        image: 309539410867.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app:latest
+        image: "175948132922.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app:latest"
         ports:
         - containerPort: 80
-

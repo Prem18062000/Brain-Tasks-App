@@ -1,4 +1,5 @@
 version: 0.2
+
 phases:
   pre_build:
     commands:
@@ -10,6 +11,7 @@ phases:
   post_build:
     commands:
       - docker push 175948132922.dkr.ecr.us-east-1.amazonaws.com/brain-tasks-app:latest
+
 artifacts:
   files:
     - '**/*'

@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.27.1/2023-04-19/bin/linux/amd64/kubectl
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/
+
+  pre_build:
+    commands:
+      - aws eks update-kubeconfig --region us-east-1 --name brain-tasks-cluster
+
+  build:
+    commands:
+      - kubectl delete svc uptime-kuma --ignore-not-found=true
+      - kubectl apply -f k8s/

@@ -8,3 +8,5 @@ spec:
     app: uptime-kuma
   ports:
   - port: 3001
+    targetPort: 3001
+

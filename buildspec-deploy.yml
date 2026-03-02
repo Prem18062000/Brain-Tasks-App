@@ -7,11 +7,17 @@ phases:
       - chmod +x kubectl
       - mv kubectl /usr/local/bin/
 
-  pre_build:
-    commands:
-      - aws eks update-kubeconfig --region us-east-1 --name brain-tasks-cluster
+pre_build:
+  commands:
+    - aws eks update-kubeconfig --region us-east-1 --name brain-tasks-cluster
 
-  build:
-    commands:
-      - kubectl delete svc uptime-kuma --ignore-not-found=true
-      - kubectl apply -f k8s/
+build:
+  commands:
+    - echo "Current directory:"
+    - pwd
+    - echo "Listing k8s structure:"
+    - ls -R k8s
+    - kubectl delete svc uptime-kuma --ignore-not-found=true
+    - kubectl apply -f k8s/
+    - echo "Services after apply:"
+    - kubectl get svc
